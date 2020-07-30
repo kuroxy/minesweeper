@@ -8,9 +8,21 @@ from math import floor
 screenSize = [1080, 720]
 
 
+print("Map size: example \"25, 25\"\n")
+sizeinp = input()
+if sizeinp:
+    sizeinp = sizeinp.split(",")
+else:
+    sizeinp = (25, 25)
+
+print("Bomb amount \n")
+amountinp = input()
+if amountinp == "":
+    amountinp=50
+
 # MINESWEEPER SETTINGS
-MAPSIZE = [25, 25]
-BOMBAMOUNT = 50
+MAPSIZE = [int(sizeinp[0]), int(sizeinp[1])]
+BOMBAMOUNT = int(amountinp)
 bomblist = msw.createbomblist(MAPSIZE, BOMBAMOUNT)
 map = msw.createmap(MAPSIZE, bomblist)
 renderMap = [[None for _ in range(MAPSIZE[0])] for _ in range(MAPSIZE[1])]
@@ -30,12 +42,8 @@ else:
 offset[0] = (screenSize[0] - MAPSIZE[0]*BUTTONSIZE)/2
 offset[1] = (screenSize[1] - MAPSIZE[1]*BUTTONSIZE)/2
 
-# loading imgs
-loadlist = ["button", "one", "two", "three", "four", "five", "six", "seven", "eight", "bomb", "flag"]
-loadedlist = {}
-for name in loadlist:
-    loadedlist[name] = pygame.image.load(f"{name}.png")
-    loadedlist[name] = pygame.transform.scale(loadedlist[name], (BUTTONSIZE, BUTTONSIZE))
+
+
 
 # initializing pygame
 pygame.init()
@@ -82,9 +90,31 @@ def emptytile(pos):
                 emptytileslist.append(i)
                 alreadyhad.append(i)
 
+
+
+
+# loading imgs
+loadlist = ["button", "one", "two", "three", "four", "five", "six", "seven", "eight", "bomb", "flag"]
+loadedlist = {}
+for name in loadlist:
+    loadedlist[name] = pygame.image.load(f"{name}.png").convert()
+    loadedlist[name] = pygame.transform.scale(loadedlist[name], (BUTTONSIZE, BUTTONSIZE))
+
+WINIMG = pygame.image.load(f"win.png").convert()
+WINIMG = pygame.transform.scale(WINIMG, (int(screenSize[0]/2), int(screenSize[1]/2)))
+
+LOSSIMG = pygame.image.load(f"boom.png").convert()
+LOSSIMG = pygame.transform.scale(LOSSIMG, (int(screenSize[0]/2), int(screenSize[1]/2)))
+
+
+
+
+
 leftmousepressed = 0
 rightmousepressed = 0
 rpressed = 0
+
+win = None
 paused = False
 while True:
     for event in pygame.event.get():
@@ -115,7 +145,8 @@ while True:
                             if renderMap[x][y] == "B":
                                 for bpos in bomblist:
                                     renderMap[bpos[0]][bpos[1]] = map[bpos[0]][bpos[1]]
-                                    paused = True
+                                paused = True
+                                win = False
         # RIGHT MOUSE
         if pygame.mouse.get_pressed() == (0, 0, 1):
             if rightmousepressed == 0:
@@ -140,6 +171,7 @@ while True:
         if amount == BOMBAMOUNT:
             paused = True
             print("YOU WON!")
+            win = True
             for bpos in bomblist:
                 renderMap[bpos[0]][bpos[1]] = "F"
 
@@ -151,6 +183,7 @@ while True:
             bomblist = msw.createbomblist(MAPSIZE, BOMBAMOUNT)
             map = msw.createmap(MAPSIZE, bomblist)
             renderMap = [[None for _ in range(MAPSIZE[0])] for _ in range(MAPSIZE[1])]
+            win = None
             paused = False
     else:
         rpressed = 0
@@ -185,6 +218,11 @@ while True:
                 display.blit(loadedlist["flag"], (int(x*BUTTONSIZE+offset[0]), int(y*BUTTONSIZE+offset[1])))
             elif renderMap[x][y] == "B":
                 display.blit(loadedlist["bomb"], (int(x*BUTTONSIZE+offset[0]), int(y*BUTTONSIZE+offset[1])))
+
+    if win == True:
+        display.blit(WINIMG, (int(screenSize[0]/4), int(screenSize[1]/4)))
+    elif win == False:
+        display.blit(LOSSIMG, (int(screenSize[0]/4), int(screenSize[1]/4)))
 
     # update screen
     pygame.display.flip()
